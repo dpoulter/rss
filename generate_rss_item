@@ -1,0 +1,37 @@
+import requests
+from bs4 import BeautifulSoup
+
+def generate_rss_item(url):
+    try:
+        # Fetch the webpage
+        response = requests.get(url)
+        response.raise_for_status()  # Raise an error for bad responses
+        
+        # Parse the content with BeautifulSoup
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+        # Extract title and description
+        title = soup.title.string if soup.title else "No Title"
+        # Get a snippet of content for the description
+        description = ' '.join(p.get_text() for p in soup.find_all('p')[:2])  # Get first two paragraphs
+
+        # Generate RSS item
+        rss_item = f"""
+<item>
+    <title>{title}</title>
+    <link>{url}</link>
+    <description>{description}</description>
+    <pubDate>{response.headers['Date']}</pubDate>
+    <guid>{url}</guid>
+</item>
+"""
+        return rss_item.strip()
+    except Exception as e:
+        print(f"Error: {e}")
+        return None
+
+if __name__ == "__main__":
+    webpage_url = "https://example.com"  # Replace with your target URL
+    rss_item = generate_rss_item(webpage_url)
+    if rss_item:
+        print(rss_item)
